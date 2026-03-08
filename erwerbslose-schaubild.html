@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Erwerbslose vs. Registrierte Arbeitslose</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    max-width: 720px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+    padding: 28px 32px;
+    color: #fff;
+  }
+
+  .card-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .card-header p {
+    margin-top: 6px;
+    font-size: 0.88rem;
+    opacity: 0.8;
+  }
+
+  .diagram-area {
+    padding: 40px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* --- Nested Set Diagram --- */
+  .outer-set {
+    position: relative;
+    width: 100%;
+    max-width: 540px;
+    border: 3px solid #2b6cb0;
+    border-radius: 24px;
+    padding: 60px 28px 28px;
+    background: rgba(43, 108, 176, 0.04);
+  }
+
+  .outer-label {
+    position: absolute;
+    top: -16px;
+    left: 28px;
+    background: #2b6cb0;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 5px 18px;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .outer-criteria {
+    font-size: 0.82rem;
+    color: #4a5568;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    padding: 0 4px;
+  }
+
+  .outer-criteria span {
+    display: inline-block;
+    background: #ebf4ff;
+    color: #2b6cb0;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 5px;
+    margin: 2px 2px;
+    font-size: 0.78rem;
+  }
+
+  .inner-set {
+    position: relative;
+    border: 3px solid #38a169;
+    border-radius: 18px;
+    padding: 50px 24px 24px;
+    background: rgba(56, 161, 105, 0.05);
+  }
+
+  .inner-label {
+    position: absolute;
+    top: -15px;
+    left: 24px;
+    background: #38a169;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 5px 16px;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .inner-criteria {
+    font-size: 0.82rem;
+    color: #4a5568;
+    line-height: 1.6;
+    padding: 0 4px;
+  }
+
+  .inner-criteria span {
+    display: inline-block;
+    background: #f0fff4;
+    color: #276749;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 5px;
+    margin: 2px 2px;
+    font-size: 0.78rem;
+  }
+
+  /* --- Diff zone --- */
+  .diff-zone {
+    margin-top: 16px;
+    background: rgba(43, 108, 176, 0.06);
+    border: 2px dashed #a0bee0;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .diff-zone .icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .diff-zone p {
+    font-size: 0.82rem;
+    color: #2c5282;
+    line-height: 1.55;
+  }
+
+  .diff-zone strong {
+    color: #1a365d;
+  }
+
+  /* --- Faustregel --- */
+  .rule-box {
+    margin-top: 28px;
+    width: 100%;
+    max-width: 540px;
+    background: #fffbeb;
+    border-left: 4px solid #d69e2e;
+    border-radius: 0 12px 12px 0;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .rule-box .icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .rule-box p {
+    font-size: 0.84rem;
+    color: #744210;
+    line-height: 1.6;
+  }
+
+  .rule-box strong {
+    color: #975a16;
+  }
+
+  /* --- Legende --- */
+  .legend {
+    margin-top: 24px;
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #718096;
+  }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 5px;
+    border: 2.5px solid;
+    flex-shrink: 0;
+  }
+
+  .legend-dot.blue { border-color: #2b6cb0; background: rgba(43,108,176,0.1); }
+  .legend-dot.green { border-color: #38a169; background: rgba(56,161,105,0.1); }
+  .legend-dot.dashed { border-color: #a0bee0; border-style: dashed; background: rgba(43,108,176,0.06); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <h1>Erwerbslose vs. Registrierte Arbeitslose</h1>
+    <p>Mengendiagramm, Wer zählt wozu?</p>
+  </div>
+
+  <div class="diagram-area">
+
+    <!-- Outer: ILO -->
+    <div class="outer-set">
+      <div class="outer-label">Erwerbslose (ILO-Definition)</div>
+      <div class="outer-criteria">
+        Kriterien:
+        <span>ohne Beschäftigung</span>
+        <span>aktiv arbeitssuchend</span>
+        <span>kurzfristig verfügbar</span><br>
+        Meldung beim Arbeitsamt ist <strong>nicht</strong> nötig.
+      </div>
+
+      <!-- Inner: Registrierte -->
+      <div class="inner-set">
+        <div class="inner-label">Registrierte Arbeitslose</div>
+        <div class="inner-criteria">
+          Kriterien:
+          <span>beim Arbeitsamt gemeldet</span>
+          <span>erfüllt Kriterien der Agentur</span><br>
+          Nur wer sich offiziell registriert hat, wird hier gezählt.
+        </div>
+      </div>
+
+      <!-- Differenzzone -->
+      <div class="diff-zone">
+        <div class="icon">👤</div>
+        <p>
+          <strong>Differenz-Bereich:</strong> Personen, die erwerbslos nach ILO sind, sich aber <strong>nicht</strong> beim Arbeitsamt gemeldet haben – z. B. Studierende, die aktiv suchen, oder Personen in informeller Arbeit.
+        </p>
+      </div>
+    </div>
+
+    <!-- Faustregel -->
+    <div class="rule-box">
+      <div class="icon">⚡</div>
+      <p>
+        <strong>Faustregel für die Klausur:</strong> Registrierte Arbeitslosigkeit ist oft enger gefasst als ILO-Erwerbslosigkeit, weil die Meldung entscheidend ist. Es sind aber zwei getrennte Definitionen, keine echte Teilmenge!
+      </p>
+    </div>
+
+    <!-- Legende -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot blue"></div> ILO-Erwerbslose (weiter gefasst)</div>
+      <div class="legend-item"><div class="legend-dot green"></div> Registrierte Arbeitslose (enger)</div>
+      <div class="legend-item"><div class="legend-dot dashed"></div> Nicht registriert, aber ILO-erwerbslos</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
