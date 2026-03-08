@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz: Erwerbslose vs. Registrierte Arbeitslose</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  #root { width: 100%; max-width: 760px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useCallback } = React;
+
+const QUESTIONS = [
+  {
+    person: "Anna (25) hat letzte Woche ihre Stelle verloren. Sie sucht aktiv online nach neuen Jobs, hat sich aber noch nicht beim Arbeitsamt gemeldet.",
+    answer: "ilo",
+    explanation: "Anna ist ohne Beschäftigung, sucht aktiv und ist kurzfristig verfügbar → ILO-erwerbslos. Aber sie ist NICHT registriert, weil sie sich nicht gemeldet hat."
+  },
+  {
+    person: "Tom (32) ist seit 3 Monaten ohne Job und hat sich bei der Agentur für Arbeit arbeitslos gemeldet. Er erfüllt alle Kriterien der Agentur.",
+    answer: "beide",
+    explanation: "Tom ist beim Arbeitsamt gemeldet → registriert arbeitslos. Er ist auch ohne Beschäftigung und sucht aktiv → zusätzlich ILO-erwerbslos. Er zählt in beiden Kategorien."
+  },
+  {
+    person: "Lisa (40) arbeitet Vollzeit als Lehrerin und ist mit ihrem Job zufrieden.",
+    answer: "keine",
+    explanation: "Lisa hat eine Beschäftigung → sie ist weder ILO-erwerbslos noch registriert arbeitslos."
+  },
+  {
+    person: "Markus (28) hat keinen Job, hat sich beim Arbeitsamt gemeldet, sucht aber eigentlich gar nicht aktiv nach Arbeit.",
+    answer: "registriert",
+    explanation: "Markus ist gemeldet und erfüllt die Kriterien der Agentur → registriert arbeitslos. Aber er sucht nicht aktiv → nach ILO-Definition NICHT erwerbslos. Das zeigt: Die Gruppen überlappen sich, sind aber nicht identisch!"
+  },
+  {
+    person: "Sarah (22) studiert Vollzeit, jobbt aber nebenbei aktiv auf Minijob-Basis und sucht eine bessere Stelle.",
+    answer: "keine",
+    explanation: "Sarah hat eine Beschäftigung (Minijob) und ist somit nicht ohne Beschäftigung im Sinne der ILO-Definition. Sie ist auch nicht beim Arbeitsamt gemeldet."
+  },
+  {
+    person: "Jens (55) hat seinen Job verloren, sucht aktiv, ist sofort verfügbar und hat sich auch beim Arbeitsamt gemeldet.",
+    answer: "beide",
+    explanation: "Jens erfüllt alle ILO-Kriterien (ohne Beschäftigung, aktiv suchend, verfügbar) UND ist beim Arbeitsamt registriert → er zählt in beiden Kategorien."
+  },
+  {
+    person: "Maria (30) hat vor einem Jahr ihren Job verloren. Sie hat die Suche aufgegeben und sich auch nie beim Arbeitsamt gemeldet.",
+    answer: "keine",
+    explanation: "Maria sucht nicht aktiv → nicht ILO-erwerbslos. Sie ist auch nicht gemeldet → nicht registriert arbeitslos. Sie zählt zu den sogenannten 'Stillen Reserve'."
+  },
+  {
+    person: "Kevin (19) macht gerade eine Ausbildung, ist aber unzufrieden und schaut sich nebenbei nach Alternativen um.",
+    answer: "keine",
+    explanation: "Kevin hat eine Beschäftigung (Ausbildung) → weder ILO-erwerbslos noch registriert arbeitslos. Das Umschauen nach Alternativen ändert daran nichts."
+  }
+];
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const ZONE_INFO = {
+  ilo: { label: "Nur ILO-erwerbslos", color: "#2b6cb0", bg: "#ebf4ff" },
+  registriert: { label: "Nur registriert arbeitslos", color: "#38a169", bg: "#f0fff4" },
+  beide: { label: "Beides", color: "#805ad5", bg: "#faf5ff" },
+  keine: { label: "Keines von beiden", color: "#e53e3e", bg: "#fff5f5" }
+};
+
+function App() {
+  const [quizQuestions] = useState(() => shuffleArray(QUESTIONS).slice(0, 5));
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [answeredCorrectly, setAnsweredCorrectly] = useState(false);
+
+  const q = quizQuestions[current];
+
+  const handleSelect = useCallback((zone) => {
+    if (showResult) return;
+    setSelected(zone);
+    setShowResult(true);
+    const correct = zone === q.answer;
+    if (correct) {
+      setScore(s => s + 1);
+      setAnsweredCorrectly(true);
+    } else {
+      setAnsweredCorrectly(false);
+    }
+  }, [showResult, q]);
+
+  const handleNext = useCallback(() => {
+    if (current + 1 >= quizQuestions.length) {
+      setFinished(true);
+    } else {
+      setCurrent(c => c + 1);
+      setSelected(null);
+      setShowResult(false);
+      setAnsweredCorrectly(false);
+    }
+  }, [current, quizQuestions.length]);
+
+  const handleRestart = useCallback(() => {
+    setCurrent(0);
+    setSelected(null);
+    setShowResult(false);
+    setScore(0);
+    setFinished(false);
+    setAnsweredCorrectly(false);
+  }, []);
+
+  const styles = {
+    card: {
+      background: '#fff',
+      borderRadius: 20,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+      overflow: 'hidden',
+      width: '100%'
+    },
+    header: {
+      background: 'linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%)',
+      padding: '24px 28px',
+      color: '#fff'
+    },
+    h1: {
+      fontFamily: "'DM Serif Display', serif",
+      fontSize: '1.4rem',
+      fontWeight: 400
+    },
+    subtitle: {
+      marginTop: 4,
+      fontSize: '0.85rem',
+      opacity: 0.8
+    },
+    body: {
+      padding: '28px'
+    },
+    progress: {
+      display: 'flex',
+      gap: 6,
+      marginBottom: 24
+    },
+    dot: (i) => ({
+      height: 6,
+      flex: 1,
+      borderRadius: 3,
+      background: i < current ? '#38a169' : i === current ? '#2b6cb0' : '#e2e8f0',
+      transition: 'background 0.3s'
+    }),
+    personCard: {
+      background: '#f7fafc',
+      border: '2px solid #e2e8f0',
+      borderRadius: 14,
+      padding: '20px 22px',
+      marginBottom: 24
+    },
+    personLabel: {
+      fontSize: '0.72rem',
+      fontWeight: 600,
+      color: '#a0aec0',
+      textTransform: 'uppercase',
+      letterSpacing: '0.08em',
+      marginBottom: 8
+    },
+    personText: {
+      fontSize: '0.95rem',
+      lineHeight: 1.65,
+      color: '#2d3748'
+    },
+    questionText: {
+      fontSize: '0.9rem',
+      fontWeight: 600,
+      color: '#4a5568',
+      marginBottom: 14
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 10,
+      marginBottom: 20
+    },
+    zoneBtn: (zone) => {
+      const info = ZONE_INFO[zone];
+      const isSelected = selected === zone;
+      const isCorrect = q && zone === q.answer;
+      let border = `2px solid #e2e8f0`;
+      let bg = '#fff';
+      let color = '#4a5568';
+      let fontWeight = 500;
+
+      if (showResult) {
+        if (isCorrect) {
+          border = `3px solid #38a169`;
+          bg = '#f0fff4';
+          color = '#276749';
+          fontWeight = 700;
+        } else if (isSelected && !isCorrect) {
+          border = `3px solid #e53e3e`;
+          bg = '#fff5f5';
+          color = '#c53030';
+          fontWeight = 600;
+        } else {
+          bg = '#f7fafc';
+          color = '#a0aec0';
+        }
+      } else {
+        border = `2px solid ${info.color}40`;
+        bg = info.bg;
+        color = info.color;
+      }
+
+      return {
+        padding: '14px 12px',
+        borderRadius: 12,
+        border,
+        background: bg,
+        color,
+        fontWeight,
+        fontSize: '0.85rem',
+        cursor: showResult ? 'default' : 'pointer',
+        transition: 'all 0.2s',
+        textAlign: 'center',
+        lineHeight: 1.4
+      };
+    },
+    explanation: {
+      background: answeredCorrectly ? '#f0fff4' : '#fff5f5',
+      borderLeft: `4px solid ${answeredCorrectly ? '#38a169' : '#e53e3e'}`,
+      borderRadius: '0 12px 12px 0',
+      padding: '16px 18px',
+      marginBottom: 20
+    },
+    explIcon: {
+      fontSize: '1rem',
+      marginBottom: 6
+    },
+    explText: {
+      fontSize: '0.84rem',
+      lineHeight: 1.6,
+      color: '#4a5568'
+    },
+    nextBtn: {
+      width: '100%',
+      padding: '14px',
+      borderRadius: 12,
+      border: 'none',
+      background: 'linear-gradient(135deg, #1a365d, #2b6cb0)',
+      color: '#fff',
+      fontSize: '0.92rem',
+      fontWeight: 600,
+      cursor: 'pointer',
+      fontFamily: "'DM Sans', sans-serif"
+    },
+    finishCard: {
+      textAlign: 'center',
+      padding: '40px 28px'
+    },
+    scoreCircle: {
+      width: 100,
+      height: 100,
+      borderRadius: '50%',
+      background: score >= 4 ? 'linear-gradient(135deg, #38a169, #48bb78)' : score >= 3 ? 'linear-gradient(135deg, #d69e2e, #ecc94b)' : 'linear-gradient(135deg, #e53e3e, #fc8181)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: '0 auto 20px',
+      color: '#fff',
+      fontSize: '1.8rem',
+      fontWeight: 700
+    },
+    scoreText: {
+      fontSize: '1.1rem',
+      color: '#2d3748',
+      fontWeight: 600,
+      marginBottom: 8
+    },
+    scoreHint: {
+      fontSize: '0.85rem',
+      color: '#718096',
+      marginBottom: 28,
+      lineHeight: 1.6
+    }
+  };
+
+  if (finished) {
+    const emoji = score === 5 ? "🏆" : score >= 4 ? "💪" : score >= 3 ? "👍" : "📚";
+    const msg = score === 5 ? "Perfekt! Klausur kann kommen!" : score >= 4 ? "Sehr gut, fast alles richtig!" : score >= 3 ? "Solide Basis, nochmal üben festigt das Wissen." : "Schau dir die Definitionen nochmal an und versuch es erneut!";
+
+    return (
+      <div style={styles.card}>
+        <div style={styles.header}>
+          <h1 style={styles.h1}>Quiz abgeschlossen!</h1>
+        </div>
+        <div style={styles.finishCard}>
+          <div style={styles.scoreCircle}>{score}/5</div>
+          <div style={styles.scoreText}>{emoji} {msg}</div>
+          <div style={styles.scoreHint}>
+            Merke: ILO-Erwerbslosigkeit und registrierte Arbeitslosigkeit sind zwei getrennte Definitionen mit unterschiedlichen Kriterien.
+          </div>
+          <button style={styles.nextBtn} onClick={handleRestart}>
+            Nochmal spielen (neue Reihenfolge)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.card}>
+      <div style={styles.header}>
+        <h1 style={styles.h1}>Quiz: Wo gehört diese Person hin?</h1>
+        <p style={styles.subtitle}>Frage {current + 1} von {quizQuestions.length}</p>
+      </div>
+      <div style={styles.body}>
+        <div style={styles.progress}>
+          {quizQuestions.map((_, i) => (
+            <div key={i} style={styles.dot(i)} />
+          ))}
+        </div>
+
+        <div style={styles.personCard}>
+          <div style={styles.personLabel}>Person</div>
+          <div style={styles.personText}>{q.person}</div>
+        </div>
+
+        <div style={styles.questionText}>In welche Kategorie fällt diese Person?</div>
+
+        <div style={styles.grid}>
+          {Object.entries(ZONE_INFO).map(([zone, info]) => (
+            <button
+              key={zone}
+              style={styles.zoneBtn(zone)}
+              onClick={() => handleSelect(zone)}
+            >
+              {info.label}
+            </button>
+          ))}
+        </div>
+
+        {showResult && (
+          <div style={styles.explanation}>
+            <div style={styles.explIcon}>{answeredCorrectly ? '✅' : '❌'}</div>
+            <div style={styles.explText}>{q.explanation}</div>
+          </div>
+        )}
+
+        {showResult && (
+          <button style={styles.nextBtn} onClick={handleNext}>
+            {current + 1 >= quizQuestions.length ? 'Ergebnis ansehen' : 'Nächste Frage →'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
